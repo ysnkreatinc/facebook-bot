@@ -6,13 +6,130 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Http\Request;
+use BotMan\Drivers\Facebook\Extensions\ButtonTemplate;
+use BotMan\Drivers\Facebook\Extensions\ElementButton;
+use BotMan\Drivers\Facebook\Extensions\Element;
+use BotMan\Drivers\Facebook\Extensions\GenericTemplate;
+use BotMan\Drivers\Facebook\Extensions\OpenGraphTemplate;
+use BotMan\Drivers\Facebook\Extensions\OpenGraMediaTemplatephElement;
+use BotMan\Drivers\Facebook\Extensions\MediaTemplate;
+use BotMan\Drivers\Facebook\Extensions\MediaUrlElement;
+
+
 
 $botman = resolve('botman');
 
 
-$botman->hears('{msg}', function ($bot, $msg) {
+$botman->hears('hi', function ($bot) {
+
+    //$dataIntent = json_decode($result->getBody()); 
+    /*
+    $user = $bot->getUser();
+    $bot->reply('Hello '.$user->getFirstName());
+    */
+
+           
+            
+    $bot->reply(ButtonTemplate::create('Do you want to know more about Kreatinc?')
+        ->addButton(ElementButton::create('Tell me more')
+            ->type('postback')
+            ->payload('tellmemore')
+        )
+        ->addButton(ElementButton::create('Show me the website')
+            ->url('http://kreatinc.com/')
+        )
+    );
+ 
+
+});
+//$botman->hears('Start conversation', BotManController::class.'@startConversation');
+$botman->hears('Startme', BotManController::class.'@startCustomConversation');
+
+
+
+
+
+$botman->hears('hi2', function ($bot) {
+
+
+    $bot->reply(GenericTemplate::create()
+    ->addImageAspectRatio(GenericTemplate::RATIO_SQUARE)
+    ->addElements([
+        Element::create('BotMan Documentation')
+            ->subtitle('All about BotMan')
+            ->image('http://botman.io/img/botman-body.png')
+            ->addButton(ElementButton::create('visit')
+                ->url('http://botman.io')
+            )
+            ->addButton(ElementButton::create('tell me more')
+                ->payload('tellmemore')
+                ->type('postback')
+            ),
+        Element::create('BotMan Laravel Starter')
+            ->subtitle('This is the best way to start with Laravel and BotMan')
+            ->image('http://botman.io/img/botman-body.png')
+            ->addButton(ElementButton::create('visit')
+                ->url('https://github.com/mpociot/botman-laravel-starter')
+            ),
+    ])
+    );
+ 
+
+});
+
+
+
+$botman->hears('hi3', function ($bot) {
+
+    $bot->reply(MediaTemplate::create()
+        ->element(MediaUrlElement::create('video')
+            ->url('https://www.facebook.com/liechteneckers/videos/10155225087428922/')
+            ->addButtons([
+                ElementButton::create('Web URL')->url('http://liechtenecker.at'),
+                ElementButton::create('Web URL')->url('http://liechtenecker.at'),
+                ElementButton::create('payload')->type('postback')->payload('test'),
+            ])
+        )
+    );
+
+});
+
+
+
+
+
+$botman->hears('test', function ($bot) {
+    $bot->reply('A test message');
+});
+
+
+
+
+$botman->on('facebook_optin', function($payload, $bot) {
+    $bot->reply('Messaging referrals');
+});
+
+$botman->on('messaging_optins', function($payload, $bot) {
+    if($payload === 'first shake')
+        $bot->reply('Messaging optins playload');
+    else
+        $bot->reply('Messaging optins');
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Do Request to Wit.ai to get Intities.
+    /*
     $client = new Client();
     $result = $client->get('https://api.wit.ai/message?v=20200206&q='.$msg, [
         'headers' => [
@@ -20,74 +137,5 @@ $botman->hears('{msg}', function ($bot, $msg) {
             'Authorization' => 'Bearer ZBQE6FF7EGSC3ILKNQWBZ2MIYYILBUJL'
         ]
     ]);
-
-    // Parsing body content to json.
-    $dataIntent = json_decode($result->getBody());
-    // Fetching json to get keys and get entities      
-    foreach ($dataIntent->entities as $key => $val)
-    {
- 
-
-        if ($key == 'greetings'){
-           $bot->reply("Hello, how can i help you ?");
-            break;
-        }
-
-        else if ($val[0]->value == 'learn'){
-            $bot->reply("What do you learn ?");
-         break;
-        }
-        
-        else if ($key == 'langs'){
+    */
             
-            foreach($val as $key2 => $val2){
-                if($val2->confidence * 100 > 70){
-                    $bot->reply("What's your level ?");
-                    Session::put('langs', $msg);
-                    break;
-                }
-            }
-
-        }
-
-        else if ($key == 'levels'){
-            Session::put('levels', $msg);
-            $bot->reply("Where are you from ?");
-        }
-
-        else if ($key == 'location'){
-            Session::put('location', $msg);
-            $bot->reply("Please give us your email address.");
-            break;
-        }
-
-        else if ($key == 'email'){
-            Session::put('email', $msg);
-            $bot->reply("Please enter you phone number.");
-            break;
-        }
-
-        else if($key == 'phone_number')
-        {
-            Session::put('phone', $msg);
-            Session::put('finish', true);
-            $bot->reply("Thank you so much, an email has been, please verify! GoodBye :D");
-            break;
-        }
-    }
-    
-    if (Session::has('key'))
-    {
-        $bot->reply('You want to learn : '. session('langs') . 
-        ' You Level is : '. session('levels') .
-        ' You are from : '. session('location').
-        ' Email : '. session('email').
-        ' Phone number : '. session('phone')
-        );
-        //Session::flush();
-    }
-    
-    //$bot->reply(session('key'));
-    //Session::flush();
-});
-//$botman->hears('Start conversation', BotManController::class.'@startConversation');
